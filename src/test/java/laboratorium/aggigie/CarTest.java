@@ -4,7 +4,10 @@
 package laboratorium.aggigie;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
+
+import javax.management.RuntimeErrorException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -50,5 +53,50 @@ public class CarTest {
             verify(myFerrari).driveTo("Kartuzy");
             verify(myFerrari).needsFuel();
             assertFalse(myFerrari.needsFuel());
+        }
+
+        @Test
+        public void testIfUnableToDriveWhenNoFuel() {
+            when(myFerrari.needsFuel()).thenReturn(true);
+            Mockito.doThrow(new RuntimeException()).when(myFerrari).driveTo(anyString());
+            final String destinationCity = "Alicante";
+            assertAll(() -> {
+                assertTrue(myFerrari.needsFuel());
+                assertThrows(RuntimeException.class, () -> {
+                        myFerrari.driveTo(destinationCity);});
+            });
+            verify(myFerrari).driveTo(destinationCity);
+            verify(myFerrari).needsFuel();
+        }
+
+        @Test
+        public void testTemperatureLevel(){
+            final Double engineTemp = 80.8;
+            final String destinationCity = "Alicante";
+
+            when(myFerrari.getEngineTemperature()).thenReturn(engineTemp);
+            Mockito
+                    .doThrow(
+                            new RuntimeException())
+                    .when(myFerrari)
+                    .driveTo(anyString());
+
+            assertAll(() -> {
+                assertEquals(engineTemp, myFerrari.getEngineTemperature());
+                assertThrows(RuntimeException.class, () -> {
+                    myFerrari.driveTo(destinationCity);
+                });
+            });
+            verify(myFerrari).getEngineTemperature();
+            verify(myFerrari).driveTo(destinationCity);
+        }
+
+        @Test
+        public void testMisusedDestinations(){
+            final String destinationCity = "Alicante";
+            final String theCity = "Barcelona";
+            myFerrari.driveTo(destinationCity);
+            assertNotEquals(destinationCity, theCity);
+            verify(myFerrari, never()).driveTo(theCity);
         }
 }
